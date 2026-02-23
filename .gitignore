@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.FCBak
+.DS_Store
+
+# FreeCAD temp files
+*.FCStd1
+
+# Screenshots (build artifacts)
+freecad_screenshot*.png
+freecad_result*.png
