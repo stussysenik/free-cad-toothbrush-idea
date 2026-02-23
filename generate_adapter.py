@@ -3,7 +3,8 @@
 Sonicare-to-Philips One Adapter
 Build a SINGLE visible solid. No boolean chain madness.
 """
-import sys, os, math
+import sys
+import os
 sys.path.insert(0, '/Applications/FreeCAD.app/Contents/Resources/lib')
 
 import FreeCAD
@@ -148,7 +149,8 @@ doc.saveAs(OUTPUT)
 # Now inject GuiDocument.xml for proper visibility
 FreeCAD.closeDocument(doc.Name)
 
-import zipfile, shutil
+import zipfile
+import shutil
 TEMP = OUTPUT + '.tmp'
 gui_xml = '''<?xml version='1.0' encoding='utf-8'?>
 <Document SchemaVersion="1">
@@ -182,11 +184,11 @@ shutil.move(TEMP, OUTPUT)
 
 # Print summary
 bb = adapter.BoundBox
-print(f"\n=== SonicareAdapter ===")
+print("\n=== SonicareAdapter ===")
 print(f"File: {OUTPUT}")
 print(f"Size: {bb.XLength:.1f} x {bb.YLength:.1f} x {bb.ZLength:.1f} mm")
 print(f"Volume: {adapter.Volume:.1f} mm³")
 print(f"Total height: {total_h:.1f} mm (grip {grip_h} + collar {collar_h})")
 print(f"Collar OD: {ADAPTER_COLLAR_DIA} mm")
 print(f"Grip cone bore: {HANDLE_CONE_BASE_DIA}mm -> {HANDLE_CONE_TIP_DIA}mm")
-print(f"\nDouble-click the .FCStd file to open!")
+print("\nDouble-click the .FCStd file to open!")

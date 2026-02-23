@@ -1,5 +1,6 @@
 """Fix visibility — make SonicareAdapter visible and fit view."""
-import sys, os
+import sys
+import os
 sys.path.insert(0, '/Applications/FreeCAD.app/Contents/Resources/lib')
 import FreeCAD
 

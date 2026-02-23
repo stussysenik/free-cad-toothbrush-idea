@@ -1,8 +1,8 @@
 """Export the adapter to STL and print dimensions."""
-import sys, os
+import sys
+import os
 sys.path.insert(0, '/Applications/FreeCAD.app/Contents/Resources/lib')
 import FreeCAD
-import Part
 
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 fcstd = os.path.join(OUTPUT_DIR, 'SonicareAdapter.FCStd')
@@ -17,7 +17,7 @@ if adapter and hasattr(adapter, 'Shape') and not adapter.Shape.isNull():
     shape.exportStl(stl_out)
     print(f"STL exported: {stl_out}")
     bb = shape.BoundBox
-    print(f"\nBounding box:")
+    print("\nBounding box:")
     print(f"  X: {bb.XLength:.1f} mm (width)")
     print(f"  Y: {bb.YLength:.1f} mm (depth)")
     print(f"  Z: {bb.ZLength:.1f} mm (height)")
