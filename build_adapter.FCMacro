@@ -1,0 +1,106 @@
+"""
+FreeCAD Macro — Run this FROM INSIDE FreeCAD (Macro > Execute Macro)
+Builds the Sonicare-to-Philips One adapter directly in the GUI.
+"""
+import FreeCAD
+import Part
+import math
+
+# Close any existing SonicareAdapter document
+for d in FreeCAD.listDocuments():
+    if 'Sonicare' in d:
+        FreeCAD.closeDocument(d)
+
+doc = FreeCAD.newDocument("SonicareAdapter")
+
+# ── PARAMETERS (mm) ──
+HANDLE_CONE_BASE_DIA = 16.0
+HANDLE_CONE_TIP_DIA  = 8.0
+HANDLE_CONE_HEIGHT   = 8.0
+SHAFT_DIA            = 3.0
+SHAFT_CLEARANCE      = 0.5
+ADAPTER_COLLAR_DIA   = 13.5
+ADAPTER_COLLAR_H     = 15.0
+ADAPTER_GRIP_H       = 8.0
+ADAPTER_WALL_MIN     = 2.0
+SNAP_LIP_DIA         = 14.2
+SNAP_LIP_H           = 1.5
+PRINT_TOL            = 0.2
+SLIT_W               = 1.5
+
+collar_r = ADAPTER_COLLAR_DIA / 2
+grip_h   = ADAPTER_GRIP_H
+collar_h = ADAPTER_COLLAR_H
+total_h  = grip_h + collar_h
+shaft_r  = (SHAFT_DIA + SHAFT_CLEARANCE + PRINT_TOL) / 2
+snap_r   = SNAP_LIP_DIA / 2
+
+grip_cone_r_bot = (HANDLE_CONE_BASE_DIA / 2) + PRINT_TOL
+grip_cone_r_top = (HANDLE_CONE_TIP_DIA / 2) + PRINT_TOL
+grip_outer_r_bot = max(grip_cone_r_bot + ADAPTER_WALL_MIN, collar_r)
+
+# Outer collar cylinder
+outer_collar = Part.makeCylinder(collar_r, collar_h,
+                                  FreeCAD.Vector(0, 0, grip_h))
+
+# Outer grip cone (wider at bottom)
+outer_grip = Part.makeCone(grip_outer_r_bot, collar_r, grip_h,
+                            FreeCAD.Vector(0, 0, 0))
+
+outer = outer_grip.fuse(outer_collar)
+
+# Inner cone cavity (matches Philips One handle top)
+inner_cone = Part.makeCone(grip_cone_r_bot, grip_cone_r_top, grip_h,
+                            FreeCAD.Vector(0, 0, 0))
+
+# Shaft through-hole
+shaft_hole = Part.makeCylinder(shaft_r, total_h + 2,
+                                FreeCAD.Vector(0, 0, -1))
+
+# Snap lip ring
+snap_ring = Part.makeCylinder(snap_r, SNAP_LIP_H,
+                               FreeCAD.Vector(0, 0, total_h - SNAP_LIP_H))
+snap_bore = Part.makeCylinder(collar_r - 0.01, SNAP_LIP_H + 1,
+                               FreeCAD.Vector(0, 0, total_h - SNAP_LIP_H - 0.5))
+snap = snap_ring.cut(snap_bore)
+
+# Flex slits
+slit_len = grip_outer_r_bot * 2 + 4
+slit_depth = grip_h * 0.75
+slit1 = Part.makeBox(SLIT_W, slit_len, slit_depth,
+                      FreeCAD.Vector(-SLIT_W/2, -slit_len/2, 0))
+slit2 = Part.makeBox(slit_len, SLIT_W, slit_depth,
+                      FreeCAD.Vector(-slit_len/2, -SLIT_W/2, 0))
+
+# Combine everything
+adapter = outer.fuse(snap)
+adapter = adapter.cut(inner_cone)
+adapter = adapter.cut(shaft_hole)
+adapter = adapter.cut(slit1)
+adapter = adapter.cut(slit2)
+adapter = adapter.removeSplitter()
+
+# Create the feature in the document
+feat = doc.addObject("Part::Feature", "SonicareAdapter")
+feat.Shape = adapter
+
+doc.recompute()
+
+# Set color and make visible
+if hasattr(feat, 'ViewObject'):
+    feat.ViewObject.Visibility = True
+    feat.ViewObject.ShapeAppearance = [FreeCAD.Material(
+        DiffuseColor=(0.3, 0.7, 0.75, 0.0),
+        AmbientColor=(0.2, 0.2, 0.2, 0.0),
+        SpecularColor=(0.5, 0.5, 0.5, 0.0),
+        Shininess=0.7
+    )]
+
+# Fit the view
+import FreeCADGui
+FreeCADGui.activeDocument().activeView().viewIsometric()
+FreeCADGui.SendMsgToActiveView("ViewFit")
+
+FreeCAD.Console.PrintMessage("\n=== Adapter built! ===\n")
+FreeCAD.Console.PrintMessage(f"Size: {adapter.BoundBox.XLength:.1f} x {adapter.BoundBox.YLength:.1f} x {adapter.BoundBox.ZLength:.1f} mm\n")
+FreeCAD.Console.PrintMessage(f"Volume: {adapter.Volume:.1f} mm³\n")
